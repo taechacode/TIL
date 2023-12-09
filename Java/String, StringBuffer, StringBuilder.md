@@ -151,4 +151,4 @@ public final class StringBuffer implements java.io.Serializable {
 
 ![StringBuffer추천](https://github.com/taechacode/TIL/assets/63395751/876a1617-86d2-4b4c-82f9-8a4d48831784)
 
-- StringBuilder 클래스 주속에서 동기화가 필요할 경우 StringBuffer을 추천한다는 문구를 확인할 수 있다.
+- StringBuilder 클래스 주석에서 동기화가 필요할 경우 StringBuffer을 추천한다는 문구를 확인할 수 있다.
