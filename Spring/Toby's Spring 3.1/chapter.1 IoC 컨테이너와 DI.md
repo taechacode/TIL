@@ -77,3 +77,75 @@ UserDao가 다른 목적으로 상속을 사용한다면?
 슈퍼 클래스 내부의 변경이 생긴다면?    
 상속을 통한 상하위 클래스 관계는 밀접하다. 따라서 슈퍼 클래스의 변경은 모든 서브클래스의 수정을 야기할 수 있다.
 
+# 1.3 DAO의 확장
+## 1.3.1 클래스의 분리
+![두 개의 독립된 클래스로 분리한 결과](https://github.com/taechacode/TIL/assets/63395751/d824f929-9f0a-40c1-a805-bab4f8a99e40)
+
+## 1.3.2 인터페이스의 도입
+- 인터페이스는 자신을 구현한 클래스에 대한 구체적인 정보는 모두 감춰버린다.
+- 인터페이스를 통해 접근하게 되면 실제 구현한 클래스를 바꿔도 신경 쓸 일이 없다.
+<br/>
+
+![인터페이스를 도입한 결과](https://github.com/taechacode/TIL/assets/63395751/66efc084-fcf7-439f-9ddc-e08db0d4b0e5)
+
+- 구체적인 기능은 NConnectionMaker()와 DConnectionMaker() 아래에 구현되어있다.
+- DB 커넥션에 대한 구체적인 정보는 모두 제거했지만 아직까지 생성자 코드는 남아있다.
+
+## 1.3.3 관계설정 책임의 분리
+- UserDAO가 구체적인 정보와 완전히 분리되지 못함. 왜냐하면 UserDAO 내에 어떤 ConnectionMaker를 사용할 것인지에 대한 코드가 남아있기 때문.
+- 만약 UserDAO 안에 new NConnectionMaker()를 사용하기로 되어있다고 생각해보자.
+- UserDAO를 가져와서 쓰는 Client는 DConnectionMaker()를 사용하고 싶을 때 어떻게 해야하나? 난감하다.
+- Client에서 사용하는 시점에, 런타임에 어떤 ConnectionMaker()를 사용할 지 정하고 싶다.
+
+```
+public UserDao(ConnectionMaker connectionMaker) {
+    this.connectionMaker = connectionMaker;
+}
+```
+
+```
+ConnectionMaker connectionMaker = new DConnectionMaker();
+UserDao dao = new UserDao(connectionMaker);
+```
+
+## 1.3.4 원칙과 패턴
+
+### 개방 폐쇄 원칙
+- `클래스나 모듈은 확장에는 열려 있어야 하고 변경에는 닫혀 있어야 한다`
+
+### 높은 응집도와 낮은 결합도
+- **응집도가 높다** : 하나의 모듈, 클래스가 하나의 책임 또는 관심사에만 집중되어 있다.
+- 응집도가 높으면 모듈의 한 부분에서 변경이 일어날 때, 모듈의 다른 많은 부분이 함께 바뀐다.
+- 처음의 초난감DAO에서는 여러 관심사와 책임이 얽혀 있어 한 부분을 건드렸을 때 다른 부분까지 영향을 미칠 수 있고, 이것을 개발자가 직접 알아내야한다.<br/>
+    - 은행에서는 소위 저런 일을 `영향도 파악`이라고 부른다..
+  
+- ConnectionMaker를 통해 DB 연결 기능을 독립시킨 경우라면?
+    - DB 커넥션 풀을 활용하는 ConnectionMaker 구현 클래스를 새로 만들기만 하면 된다.
+    - 기존에 구현된 DConnectionMaker나 NConnectionMaker를 수정하더라도 UserDao 등 다른 클래스에 영향을 주지 않는다.
+    - 단위 테스트를 진행할 때도 개선된 특정 ConnectionMaker를 테스트하기 위해 이를 사용하는 모든 DAO를 테스트할 필요는 없을 것이다.
+ <br/>
+
+- **결합도가 낮다** : 책임과 관심사가 다른 오브젝트 또는 모듈과는 느슨하게 연결된 형태를 유지하는 것이 바람직하다.
+    - 결합도란? : 하나의 오브젝트 변경이 일어날 때에 관계를 맺고 있는 다른 오브젝트에게 변화를 요구하는 정도
+    - ConnectionMaker 인터페이스의 도입으로 구체적인 정보를 가진 클래스가 바뀌더라도 DAO의 코드는 변경될 필요가 없다.
+    - ConnectionMaker의 클래스를 결정하는 책임도 DAO의 Client로 분리한 덕분에 구체적인 정보를 가진 클래스가 바뀌더라도 DAO 클래스 코드를 수정할 필요가 없다.
+
+ ### 전략 패턴
+- 자신의 기능 맥락(context)에서, 필요에 따라 변경이 필요한 알고리즘 클래스를 필요에 따라 바꿔서 사용할 수 있게 만드는 디자인 패턴.
+    - 알고리즘 : 독립적인 책임으로 분리가 가능한 기능
+    - UserDao -> Context
+    - ConnectionMaker의 DB 연결 기능 -> 알고리즘
+    - 구체적인 기능을 구현한 클래스들 -> 전략
+
+# 부록 : EJB와 스프링
+
+## EJB에서 스프링에 대세가 된 이유들..
+
+### 단순화된 단위 테스트
+- EJB는 단위 테스트가 어렵다. 사실상 불가능하다.
+- EJB 컨테이너 위에서만 로직 실행 가능.
+### 복잡한 코드의 감소
+- 위 토비의 스프링에서 봤듯이 모듈화를 통한 높은 응집도와 낮은 결합도
+### 모듈화 구조
+
+![현재 사용중인 EJB 구조 예시](https://github.com/Tobystudy/toby-spring-study/assets/63395751/e474a83f-489b-4d2d-ba8a-7d4c0ea6a725)
