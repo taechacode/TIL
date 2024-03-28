@@ -77,6 +77,7 @@ UserDao가 다른 목적으로 상속을 사용한다면?
 슈퍼 클래스 내부의 변경이 생긴다면?    
 상속을 통한 상하위 클래스 관계는 밀접하다. 따라서 슈퍼 클래스의 변경은 모든 서브클래스의 수정을 야기할 수 있다.
 
+<<<<<<< Updated upstream
 # 1.3 DAO의 확장
 ## 1.3.1 클래스의 분리
 ![두 개의 독립된 클래스로 분리한 결과](https://github.com/taechacode/TIL/assets/63395751/d824f929-9f0a-40c1-a805-bab4f8a99e40)
@@ -149,3 +150,8 @@ UserDao dao = new UserDao(connectionMaker);
 ### 모듈화 구조
 
 ![현재 사용중인 EJB 구조 예시](https://github.com/Tobystudy/toby-spring-study/assets/63395751/e474a83f-489b-4d2d-ba8a-7d4c0ea6a725)
+=======
+1.3 DAO의 확장
+
+1.3.1 클래스의 분리
+>>>>>>> Stashed changes
