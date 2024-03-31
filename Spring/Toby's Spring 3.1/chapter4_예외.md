@@ -287,14 +287,21 @@ public void add(User user) throws DuplicateUserIdException, SQLException {
 #### add() 메소드의 예외처리
 - DuplicateUserIdException을 RuntimeException을 상속한 런타임 예외로 만든다. 그리고 SQLException이 발생한 경우에는 DuplicateUserIdException을 던지게 하여 예외 전환을 사용한다.
 - 이제 이 add() 메소드를 사용하는 오브젝트는 SQLException을 처리하기 위해 불필요한 throws 선언을 할 필요는 없으면서, 필요한 경우 아이디 중복 상황을 처리하기 위해 DuplicatedUserIdException을 이용할 수 있다.
+<br/>
 
 #### 애플리케이션 예외
 - 시스템 또는 외부의 예외상화잉 원인이 아니라 애플리케이션 자체의 로직에 의해 의도적으로 발생시키고, 반드시 catch해서 무엇인가 조치를 취하도록 요구하는 예외도 있다. 이런 예외들을 일반적으로 `애플리케이션 예외`라고 한다.
 - 예를 들어 사용자가 요청한 금액을 은행계좌에서 출금하는 기능을 가진 메소드가 있다고 생각해보자. 현재 잔고를 확인하고, 허용하는 범위를 넘어서 출금을 요청하면 출금 작업을 중단시키고 적절한 경고를 사용자에게 보내야 한다.
     - 첫 번째 메소드 설계 방법은 정상적인 출금처리를 했을 경우와 잔고 부족이 발생했을 경우에 각각 다른 종류의 return 값을 돌려주는 것이다.
     - 두 번째 방법은 정상적인 흐름을 따르는 코드는 그대로 두고, 잔고 부족과 같은 예외 상황에서는 비즈니스적인 의미를 띤 예외(체크 예외)를 던지도록 만드는 것이다.
+<br/>
 
-### 4.1.5 SQLExceptino은 어떻게 됐나?
+### 4.1.5 SQLException은 어떻게 됐나?
+- 지금까지 다룬 예외처리에 대한 내용은 JdbcTemplate을 적용하는 중에 throws Exception 선언이 왜 사라졌는가를 설명하는 데 필요한 것이었다.
+- 대부분의 SQLException은 코드 레벨에서는 복구할 방법이 없다.
+- 따라서 에외처리 전략을 사용해야 한다. 필요도 없는 기계적인 throws 선언이 등장하도록 방치하지 말고 가능한 빨리 언체크/런타임 예외로 전환해줘야 한다.
+- 스프링 JdbcTemplate은 템플릿과 콜백 안에서 발생하는 모든 SQLException을 런타임 예외인 DataAccessException으로 포장해서 던져준다. 따라서 JdbcTemplate을 사용하는 UserDao 메소드에선 꼭 필요한 경우에만 런타임 예외인 DataAccessException을 잡아서 처리하면 되고 그 외의 경우에는 무시해도 된다. 그래서 DAO 메소드에서 SQLException이 모두 사라졌다.
+<br/>
 
 ## 4.2 예외 전환
 
