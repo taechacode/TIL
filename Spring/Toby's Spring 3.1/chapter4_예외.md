@@ -225,10 +225,76 @@ public void add() throws SQLException {
 #### 예외 전환
 - 마지막으로 예외를 처리하는 방법은 `예외 전환 exception translation`을 하는 것이다. 예외 회피와 비슷하게 예외를 복구해서 정상적인 상태로는 만들 수 없기 때문에 예외를 메소드 밖으로 던지는 것이다.
 - 하지만 예외 회피와 달리, 발생한 예외를 그대로 넘기는 게 아니라 `적절한 예외로 전환해서 던진다는 특징이 있다.`
+<br/>
+
 - 예외 전환은 보통 두 가지 목적으로 사용된다.
 - 첫째는 내부에서 발생한 예외를 그대로 던지는 것이 그 예외상황에 대한 적절한 의미를 부여해주지 못하는 경우에, 의미를 분명하게 해줄 수 있는 예외로 바꿔주기 위해서다.
     - 예를 들어 새로운 사용자를 등록하려고 시도했을 때 아이디가 같은 사용자가 있어 DB 에러가 발생하면 JDBC API는 SQLException을 발생시킨다.
     - 이 경우 DAO 메소드가 SQLException을 그대로 밖으로 던져버리면, DAO를 이용해 사용자를 추가하려고 한 서비스 계층 등에서는 왜 SQLException이 발생했는지 쉽게 알 방법이 없다.
     - 이럴 때는 DAO에서 SQLException의 정보를 해석해서 DuplicateUserIdException 같은 예외로 바꿔서 던져주는게 좋다.
     - 의미가 분명한 예외가 던져지면 서비스 계층 오브젝트에는 적절한 복구 작업을 시도할 수 있다.
-      
+<br/>
+
+```
+public void add(User user) throws DuplicateUserIdException, SQLException {
+	try {
+		// JDBC를 이용해 user 정보를 DB에 추가하는 코드 또는
+		// 그런 기능을 가진 다른 SQLException을 던지는 메소드를 호출하는 코드
+	}
+	catch(SQLException e) {
+		// ErrorCode가 MySQL의 "Duplicate Entry(1062)"이면 예외 전환
+		if(e.getErrorCode() == MysqlErrorNumbers.ER_DUP_ENTRY)
+			throw DuplicateUserIdException();
+		else
+			throw e; // 그 외의 경우는 SQLException 그대로
+	}
+}
+```
+**사용자 정보 등록 시 중복된 아이디 값이 발생할 경우 의미 있는 DuplicateKeyException으로 전환해주는 DAO 메소드**
+<br/>
+
+- 두 번째 전환 방법은 `예외를 처리하기 쉽고 단순하게 만들기 위해 포장wrap하는 것이다.`
+    - 중첩 예외를 이용해 새로운 예외를 만들고 원인cause이 되는 예외를 내부에 담아서 던지는 방식은 같다. 하지만 의미를 명확하게 하려고 다른 예외로 전환하는 것이 아니다. 주로 `예외처리를 강제하는 체크 예외를 언체크 예외인 런타임 예외로 바꾸는 경우에 사용한다.`
+    - 대표적인 예시로 EJBException이 있다. EJB 컴포넌트 코드에서 발생하는 대부분의 체크 예외는 비즈니스 로직으로 볼 때 의미 있는 예외이거나 복구 가능한 예외가 아니다. 이런 경우에는 런타임 예외인 EJBException으로 포장해서 던지는 편이 낫다.
+    - EJBException은 RuntimeException 클래스를 상속한 런타임 예외이기 때문에 EJB는 이를 시스템 Exception으로 인식하고 트랜잭션을 자동으로 롤백해준다. (일일이 예외를 잡아봐야 복구할만한 방법이 없기 때문에..)
+    - 반대로 애플리케이션 로직 상에서 예외조건이 발견되거나 예외상황이 발생할 수도 있다. 이런 것은 API가 던지는 예외가 아니라 애플리케이션 코드에서 의도적으로 던지는 예외다. 이때는 체크 예외를 사용하는 것이 적절하다. 비즈니스 적인 의미가 있는 예외는 이에 대한 적절한 대응이나 복구 작업이 필요하기 때문이다.
+<br/>
+
+```
+	try {
+		OrderHome orderHome = EJBHomeFactory.getInstance().getOrderHome();
+		Order order = orderHome.findByPrimaryKey(Integer id);
+	} catch (NamingException ne) {
+		throw new EJBException(ne);
+	} catch (SQLException se) {
+		throw new EJBException(se);
+	} catch (RemoteException re) {
+		throw new EJBException(re);
+	}
+```
+**예외 포장**
+<br/>
+
+
+
+### 4.1.4 예외처리 전략
+
+### 4.1.5 SQLExceptino은 어떻게 됐나?
+
+## 4.2 예외 전환
+
+### 4.2.1 JDBC의 한계
+
+#### 비표준 SQL
+#### 호환성 없는 SQLException의 DB 에러정보
+
+### 4.2.2 DB 에러 코드 매핑을 통한 전환
+
+### 4.2.3 DAO 인터페이스와 DataAccessException 계층구조
+
+#### 데이터 액세스 예외 추상화와 DataAccessException 계층구조
+
+### 4.2.4 기술에 독립적인 UserDao 만들기
+#### 인터페이스 적용
+#### 테스트 보완
+#### DataAccessException 활용 시 주의사항
