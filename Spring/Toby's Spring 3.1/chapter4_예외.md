@@ -309,12 +309,15 @@ public void add(User user) throws DuplicateUserIdException, SQLException {
 
 #### 비표준 SQL
 #### 호환성 없는 SQLException의 DB 에러정보
+<br/>
 
 ### 4.2.2 DB 에러 코드 매핑을 통한 전환
+<br/>
 
 ### 4.2.3 DAO 인터페이스와 DataAccessException 계층구조
 
 #### 데이터 액세스 예외 추상화와 DataAccessException 계층구조
+<br/>
 
 ### 4.2.4 기술에 독립적인 UserDao 만들기
 #### 인터페이스 적용
