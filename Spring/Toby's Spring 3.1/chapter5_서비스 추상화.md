@@ -25,7 +25,7 @@ class User {
 	}	
 }
 ```
-**5-1 정수형 상수 값으로 정의한 사용자 레벨**
+**리스트 5-1 정수형 상수 값으로 정의한 사용자 레벨**
 <br/><br/>
 
 ```
@@ -33,7 +33,7 @@ if(user1.getLevel() == User.BASIC) {
   user1.setLevel(User.SILVER);
 }
 ```
-**5-2 사용자 레벨 상수 값을 이용한 코드**
+**리스트 5-2 사용자 레벨 상수 값을 이용한 코드**
 <br/><br/>
 
 - 문제는 level 타입이 int이기 때문에 다른 종류의 정보를 넣는 실수를 해도 컴파일러가 체크해주지 못한다.
@@ -77,10 +77,36 @@ public enum Level {
 	}
 }
 ```
-**5-3 사용자 레벨용 이늄**
+**리스트 5-3 사용자 레벨용 이늄**
 <br/><br/>
 
 #### User 필드 추가
+```
+public class User {
+	...
+	Level level;
+	int login;
+	int recommend;
+	
+	public Level getLevel() {
+		return level;
+	}
+	
+	public void setLevel(Level level) {
+		this.level = level;
+	}
+	...
+	
+	// login, recommend getter/setter 생략
+}
+```
+**리스트 5-4 User에 추가된 필드**
+<br/><br/>
+
+![USER 테이블 추가 필드](https://github.com/taechacode/TIL/assets/63395751/aba6cfd7-79ea-4c05-8a2a-74fbc100ac8f)
+**표 5-1 USER 테이블 추가 필드**
+<br/><br/>
+
 #### UserDaoTest 테스트 수정
 #### UserDaoJdbc 수정
 <br/>
