@@ -104,10 +104,67 @@ public class User {
 <br/><br/>
 
 ![USER 테이블 추가 필드](https://github.com/taechacode/TIL/assets/63395751/aba6cfd7-79ea-4c05-8a2a-74fbc100ac8f)
+<br/>
 **표 5-1 USER 테이블 추가 필드**
 <br/><br/>
 
 #### UserDaoTest 테스트 수정
+```
+public class UserDaoTest {
+	...
+	@Before
+	public void setUp() {
+		this.user1 = new User("jinia91", "최원진", "springno1", Level.BASIC, 1, 0); // 추가된 필드를 위한 초기값
+		this.user2 = new User("albireo3754", "윤상진", "springno2", Level.BASIC, 55, 10);
+		this.user3 = new User("tlswltjq", "신지섭", "springno3", Level.BASIC, 100, 40);
+	}
+}
+```
+**리스트 5-5 수정된 테스트 픽스처**
+<br/><br/>
+
+```
+class User {
+	...
+	public User(String id, String name, String password, Level level, int login, int recommend) {
+		this.id = id;
+		this.name = name;
+		this.password = password;
+		this.level = level;
+		this.login = login;
+		this.recommend = recommend;
+	}
+}
+```
+**리스트 5-6 추가된 필드를 파라미터로 포함하는 생성자**
+<br/><br/>
+
+```
+private void checkSameUser(User user1, User user2) {
+	assertThat(user1.getId(), is(User2.getId()));
+	assertThat(user1.getName(), is(User2.getName()));
+	assertThat(user1.getPassword(), is(User2.getPassword()));
+	assertThat(user1.getLevel(), is(user2.getLevel()));
+	assertThat(user1.getLogin(), is(user2.getLogin()));
+	assertThat(user1.getRecommend(), is(user2.getRecommend()));
+}
+```
+**리스트 5-7 새로운 필드를 포함하는 User 필드 값 검증 메소드**
+<br/><br/>
+
+```
+@Test public void addAndGet() {
+	...
+	User userget1 = dao.get(user1.getId());
+	checkSameUser(userget1, user1);
+	
+	User userget2 = dao.get(user2.getId());
+	checkSameUser(userget2, user2);
+}
+```
+**리스트 5-8 checkSameUser() 메소드를 사용하도록 만든 addAndGet() 메소드**
+<br/><br/>
+
 #### UserDaoJdbc 수정
 <br/>
 
