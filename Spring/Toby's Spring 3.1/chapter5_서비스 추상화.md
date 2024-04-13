@@ -11,6 +11,75 @@
 
 ### 5.1.1 필드 추가
 #### Level 이늄
+
+```
+class User {
+	private static final int BASIC = 1;
+	private static final int SILVER = 2;
+	private static final int GOLD = 3;
+	
+	int level;
+	
+	public void setLevel(int level) {
+		this.level = level;
+	}	
+}
+```
+**5-1 정수형 상수 값으로 정의한 사용자 레벨**
+<br/><br/>
+
+```
+if(user1.getLevel() == User.BASIC) {
+  user1.setLevel(User.SILVER);
+}
+```
+**5-2 사용자 레벨 상수 값을 이용한 코드**
+<br/><br/>
+
+- 문제는 level 타입이 int이기 때문에 다른 종류의 정보를 넣는 실수를 해도 컴파일러가 체크해주지 못한다.
+- getSum() 메소드가 1, 2, 3과 같은 값을 돌려주면 기능은 문제없이 돌아가는 것처럼 보이겠지만 사실은 레벨이 엉뚱하게 바뀌는 심각한 버그가 만들어진다.
+
+```
+user1.setLevel(other.getSum());
+```
+
+- 또, 아래와 같이 범위를 벗어나는 값을 넣을 위험도 있다.
+
+```
+user1.setLevel(1000);
+```
+- 숫자 타입을 직접 사용하는 것보다는 자바 5 이상에서 제공하는 `이늄enum`을 이용하는 게 안전하고 편리하다.
+<br/><br/>
+
+```
+package springbook.user.domain;
+...
+public enum Level {
+	BASIC(1), SILVER(2), GOLD(3); // 세 개의 이늄 오브젝트 정의
+	
+	private final int value;
+	
+	Level(int value) { // DB에 저장할 값을 넣어줄 생성자를 만들어둔다.
+		this.value = value;
+	}
+	
+	public int intValue() { // 값을 가져오는 메소드
+		return value;
+	}
+	
+	public static Level valueOf(int value) { // 값으로부터 Level 타입 오브젝트를 가져오도록 만든 스태틱 메소드
+		switch(value) {
+			case 1: return BASIC;
+			case 2: return SILVER;
+			case 3: return GOLD;
+			default: throw new AssertionError("Unknown value: " + value);
+		}
+	}
+}
+```
+**5-3 사용자 레벨용 이늄**
+<br/><br/>
+
 #### User 필드 추가
 #### UserDaoTest 테스트 수정
 #### UserDaoJdbc 수정
