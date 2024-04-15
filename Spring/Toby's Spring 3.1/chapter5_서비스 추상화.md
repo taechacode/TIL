@@ -206,7 +206,34 @@ public void update() {
 <br/><br/>
 
 #### 수정 테스트 보완
-<br/>
+- UPDATE에 WHERE절이 없을 경우 어떻게 동작을 검증할 수 있을까?
+- 첫 번째 방법은 JdbcTemplate의 update()가 돌려주는 return 값을 확인한다.
+	- return 해주는 row의 개수가 1 이상이라면 update() 메소드의 SQL에 문제가 있다.
+- 두 번째 방법은 테스트를 보강해서 원하는 사용자 외의 정보는 변경되지 않았음을 직접 확인한다.
+```
+@Test
+public void update() {
+	dao.deleteAll();
+	
+	dao.add(user1); // 수정할 사용자
+	dao.add(user2); // 수정하지 않을 사용자
+	
+	user1.setName("오민규");
+	user1.setPassword("springno6");
+	user1.setLevel(Level.GOLD);
+	user1.setLogin(1000);
+	user1.setRecommend(999);
+	
+	dao.update(user1);
+	
+	User user1update = dao.get(user1.getId());
+	checkSameUser(user1, user1update);
+	User user2same = dao.get(user2.getId());
+	checkSameUser(user2, user2same); // WHERE절을 빼먹으면 테스트 실패
+}
+```
+**리스트 5-13 보완된 update() 테스트**
+<br/><br/>
 
 ### 5.1.3 UserService.upgradeLevels()
 #### UserService 클래스와 빈 등록
