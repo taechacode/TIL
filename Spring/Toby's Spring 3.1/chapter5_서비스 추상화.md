@@ -166,7 +166,14 @@ private void checkSameUser(User user1, User user2) {
 <br/><br/>
 
 #### UserDaoJdbc 수정
-<br/>
+- 등록을 위한 INSERT 문장이 들어 있는 add() 메소드의 SQL과 각종 조회 작업에 사용되는 User 오브젝트 매핑용 콜백인 userMapper에 추가된 필드를 넣는다.
+```
+user.setLevel(Level.valueOf(rs.getInt("level")));
+user.setLogin(rs.getInt("login"));
+user.setRecommend(rs.getInt("recommend"));
+```
+**리스트 5-9 추가된 필드를 위한 UserDaoJdbc의 수정 코드**
+<br/><br/>
 
 ### 5.1.2 사용자 수정 기능 추가
 #### 수정 기능 테스트 추가
