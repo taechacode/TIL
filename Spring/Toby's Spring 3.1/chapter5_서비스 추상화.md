@@ -176,7 +176,30 @@ user.setRecommend(rs.getInt("recommend"));
 <br/><br/>
 
 ### 5.1.2 사용자 수정 기능 추가
+- 수정할 정보가 담긴 User 오브젝트를 전달하면 id를 참고해서 사용자를 찾아 필드 정보를 UPDATE 문을 이용해 모두 변경해주는 메소드를 만들어보자.
+
 #### 수정 기능 테스트 추가
+```
+@Test
+public void update() {
+	dao.deleteAll();
+	dao.add(user1);
+
+	// 픽스처에 들어 있는 정보를 변경해서 수정 메소드를 호출한다.
+	user1.setName("오민규");
+	user1.setPassword("springno6");
+	user1.setLevel(Level.GOLD);
+	user1.setLogin(1000);
+	user1.setRecommend(999);
+	dao.update(user1);
+	
+	User user1update = dao.get(user1.getId());
+	checkSameUser(user1, user1update);
+}
+```
+**리스트 5-10 사용자 정보 수정 메소드 테스트**
+<br/><br/>
+
 #### UserDao와 UserDaoJdbc 수정
 #### 수정 테스트 보완
 <br/>
