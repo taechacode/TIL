@@ -201,6 +201,10 @@ public void update() {
 <br/><br/>
 
 #### UserDao와 UserDaoJdbc 수정
+- UserDao 인터페이스에 update() 메소드가 없다는 컴파일 에러가 나므로 추가
+- UserDaoJdbc의 update() 메소드는 add()와 비슷한 방식으로 추가
+<br/><br/>
+
 #### 수정 테스트 보완
 <br/>
 
