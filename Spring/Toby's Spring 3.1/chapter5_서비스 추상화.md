@@ -236,6 +236,17 @@ public void update() {
 <br/><br/>
 
 ### 5.1.3 UserService.upgradeLevels()
+- 사용자 관리 로직은 어디다 두는 것이 좋을까?
+- UserDaoJdbc는 적합하지 않다. DAO는 데이터를 어떻게 가져오고 조작할지를 다루는 곳이지 비즈니스 로직을 두는 곳이 아니다.
+- 사용자 관리 비즈니스 로직을 담을 클래스를 하나 추가하자. 비즈니스 로직 서비스를 제공한다는 의미에서 클래스 이름은 `UserService`로 한다.
+- UserService는 UserDao의 구현 클래스가 바뀌어도 영향받지 않도록 해야 한다. 따라서 DAO의 인터페이스를 사용하고 DI를 적용해야 한다.
+<br/><br/>
+
+![UserService의 의존 관계](https://github.com/taechacode/TIL/assets/63395751/e301cba0-d4da-4d80-b6a5-f5dd94034ef4)
+<br/>
+**그림 5-1 UserService의 의존관계**
+<br/><br/>
+
 #### UserService 클래스와 빈 등록
 #### UserServiceTest 테스트 클래스
 #### upgradeLevels() 메소드
