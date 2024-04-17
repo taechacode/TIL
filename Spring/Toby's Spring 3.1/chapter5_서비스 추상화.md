@@ -446,6 +446,112 @@ if(changed) { // 레벨의 변경이 있는 경우에만 update() 호출
 <br/><br/>
 
 #### upgradeLevels() 리팩토링
+```
+public void upgradeLevels() {
+	List<Users> users = userDao.getAll();
+	for(User user : users) {
+		if(canUpgradeLevel(user)) {
+			upgradeLevel(user);
+		}
+	}
+}
+```
+**리스트 5-23 기본 작업 흐름만 남겨둔 upgradeLevels()**
+<br/><br/>
+
+```
+private boolean canUpgradeLevel(User user) {
+	Level currentLevel = user.getLevel();
+	
+	// 레벨별로 구분해서 조건을 판단한다.
+	switch(currentLevel) {
+		case BASIC: return (user.getLogin() >= 50);
+		case SILVER: return (user.getRecommend() >= 30);
+		case GOLD: return false;
+		
+		// 현재 로직에서 다룰 수 없는 레벨이 주어지면 예외를 발생시킨다.
+		// 새로운 레벨이 추가되고 로직을 수정하지 않으면 에러가 나서 확인할 수 있다.
+		default: throw new IllegalArgumentException("Unknown Level: " + currentLevel);
+	}
+	
+}
+```
+**리스트 5-24 업그레이드 가능 확인 메소드**
+- 상태에 따라서 업그레이드 조건만 비교하면 되므로, 역할과 책임이 명료해진다.
+<br/><br/>
+
+```
+private void upgradeLevel(User user) {
+	if(user.getLevel() == Level.BASIC) user.setLevel(Level.SILVER);
+	else if(user.getLevel() == Level.SILVER) user.setLevel(Level.GOLD);
+	userDao.update(user);
+}
+```
+**리스트 5-25 레벨 업그레이드 작업 메소드**
+- 사용자 오브젝트의 레벨정보를 다음 단계로 변경하고, 변경된 오브젝트를 DB에 업데이트하는 두 가지 작업을 수행한다.
+- 하지만 이 메소드에도 문제점이 있다. 먼저, 다음 단계가 무엇인가 하는 로직과 그때 사용자 오브젝트의 level 필드를 변경해준다는 로직이 함께 있는데다, 너무 노골적으로 드러나 있다.
+- 게다가 예외상황에 대한 처리가 없다. 만약 업그레이드 조건을 잘못 파악해서 더 이상 다음 단계가 없는 GOLD 레벨인 사용자를 업그레이드하려고 이 메소드를 잘못 호출한다면 아무것도 처리하지 않고 그냥 DAO의 업데이트 메소드만 실행될 것이다.
+- 레벨이 늘어나면 if문이 점점 길어질 것이고, 레벨 변경 시 사용자 오브젝트에서 level 필드 외의 값도 같이 변경해야 한다면 if 조건 뒤에 붙는 내용도 점점 길어질 것이다.
+<br/><br/>
+
+```
+public enum Level {
+	
+	// Enum 선언에 DB에 저장할 값과 함께 다음 단계의 레벨 정보도 추가한다.
+	GOLD(3, null), SILVER(2, GOLD), BASIC(1, SILVER);
+	
+	private final int value;
+	private final Level next; // 다음 단계의 레벨 정보를 스스로 갖고 있도록 Level 타입의 next 변수를 추가한다.
+	
+	Level(int value, Level next) {
+		this.value = value;
+		this.next = next;
+	}
+	
+	public int intValue() {
+		return value;
+	}
+	
+	public Level nextLevel() {
+		return this.next;
+	}
+	
+	public static Level valueOf(int value) {
+		switch(value) {
+			case 1: return BASIC;
+			case 2: return SILVER;
+			case 3: return GOLD;
+			default: throw new AssertionError("Unknown value: " + value);
+		}
+	}
+}
+```
+**리스트 5-26 업그레이드 순서를 담고 있도록 수정한 Level**
+- 먼저 레벨의 순서와 다음 단계 레벨이 무엇인지를 결정하는 일은 Level에게 맡긴다. 레벨의 순서를 굳이 UserService에 담아둘 이유가 없다.
+<br/><br/>
+
+```
+public void upgradeLevel() {
+	Level nextLevel = this.level.nextLevel();
+	if(nextLevel == null) {
+		throw new IllegalStateException(this.level + "은 업그레이드가 불가능합니다.");
+	} else {
+		this.level = nextLevel;
+	}
+}
+```
+**리스트 5-27 User의 레벨 업그레이드 작업용 메소드**
+<br/><br/>
+
+```
+private void upgradeLevel(User user) {
+	user.upgradeLevel();
+	userDao.update(user);
+}
+```
+**리스트 5-28 간결해진 upgradeLevel()**
+<br/><br/>
+
 #### User 테스트
 #### UserServiceTest 개선
 <br/>
