@@ -380,6 +380,7 @@ private void checkLevel(User user, Level expectedLevel) {
 - 일단 UserDaoJdbc의 add() 메소드는 적합하지 않아 보인다. UserDaoJdbc는 주어진 User 오브젝트를 DB에 정보를 넣고 읽는 방법에만 관심을 가져야지, 비즈니스적인 의미를 지닌 정보를 설정하는 책임을 지는 것은 바람직하지 않다.
 - 그렇다면 User 클래스에서 아예 level 필드는 Level.BASIC으로 초기화하는 것은 어떨까? 하지만 처음 가입할 때를 제외하면 무의미한 정보인데 단지 이 로직을 담기 위해 클래스에서 직접 초기화하는 것은 문제가 있어 보인다.
 - 그렇다면 사용자 관리에 대한 비즈니스 로직을 담고 있는 UserService에 이 로직을 넣으면 어떨까? UserDao의 add() 메소드는 사용자 정보를 담은 User 오브젝트를 받아서 DB에 넣어주는 데 충실한 역할을 한다면, UserService에도 add()를 만들어두고 사용자가 등록될 때 적용할 만한 비즈니스 로직을 담당하게 하면 될 것이다.
+<br/><br/>
 
 ```
 @Test
@@ -421,7 +422,29 @@ public void add(User user) {
 <br/><br/>
 
 ### 5.1.5 코드 개선
+- 코드에 중복된 부분은 없는가?
+- 코드가 무엇을 하는 것인지 이해하기 불편하지 않은가?
+- 코드가 자신이 있어야 할 자리에 있는가?
+- 앞으로 변경이 일어난다면 어떤 것이 있을 수 있고, 그 변화에 쉽게 대응할 수 있게 작성되어 있는가?
+<br/><br/>
+
 #### upgradeLevels() 메소드 코드의 문제점
+```
+if(user.getLevel() == Level.BASIC && user.getLogin() >= 50) { // BASIC 레벨 업그레이드 작업
+	user.setLevel(Level.SILVER);
+	changed = true;
+}
+...
+
+if(changed) { // 레벨의 변경이 있는 경우에만 update() 호출
+	userDao.update(user);
+}
+```
+- for 루프 속에 들어있는 if/elseif/else 블록들이 읽기 불편하다. 레벨의 변화 단계와 업그레이드 조건, 조건이 충족됐을 때 해야 할 작업이 한데 섞여 있어서 로직을 이해하기가 쉽지 않다.
+- 이런 if 조건 블록이 레벨 개수만큼 반복된다. 만약 새로운 레벨이 추가된다면 Level Enum도 수정해야 하고, upgradeLevels()의 레벨 업그레이드 로직을 담은 코드에 if 조건식과 블록을 추가해줘야 한다.
+- 현재 레벨과 업그레이드 조건을 동시에 비교하는 부분도 문제가 될 수 있다. BASIC이면서 로그인 횟수가 50이 되지 않은 경우에는 마지막 else 블록으로 이동한다, 새로운 레벨이 추가돼도 역시 기존의 if 조건들에 맞지 않을 테니 else 블록으로 이동할 것이다. 성격이 다른 두 가지 경우가 모두 한 곳에서 처리되는 것은 뭔가 이상하다.
+<br/><br/>
+
 #### upgradeLevels() 리팩토링
 #### User 테스트
 #### UserServiceTest 개선
