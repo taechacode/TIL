@@ -553,6 +553,45 @@ private void upgradeLevel(User user) {
 <br/><br/>
 
 #### User 테스트
+```
+package springbook.user.service;
+...
+public class UserTest {
+	User user;
+	
+	@Before
+	public void setUp() {
+		user = new User();
+	}
+
+	// Level Enum에 정의된 모든 레벨을 가져와서 User에 설정해두고 User의 upgradeLevel()을 실행해서 다음 레벨로 바뀌는지를 확인하는 테스트
+	@Test()
+	public void upgradeLevel() {
+		Level[] levels = Level.values();
+		for(Level level : levles) {
+			if(level.nextLevel() == null) continue;
+			user.setLevel(level);
+			user.upgradeLevel();
+			assertThat(user.getLevel(), is(level.nextLevel()));
+		}
+	}
+
+	// 더 이상 업그레이드할 레벨이 없는 경우에 upgradeLevel()을 호출하면 예외가 발생하는지를 확인하는 테스트
+	@Test(expected=IllegalStateException.class)
+	public void cannotUpgradeLevel() {
+		Level[] levels = Level.values();
+		for(Level level : levels) {
+			if(level.nextLevel() != null) continue;
+			user.setLevel(level);
+			user.upgradeLevel();
+		}
+	}
+	
+}
+```
+**리스트 5-29 User 테스트**
+<br/><br/>
+
 #### UserServiceTest 개선
 <br/>
 
