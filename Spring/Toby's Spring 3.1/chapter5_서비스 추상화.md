@@ -376,7 +376,49 @@ private void checkLevel(User user, Level expectedLevel) {
 <br/><br/>
 
 ### 5.1.4 UserService.add()
-<br/>
+- 아직 구현되지 않은 비즈니스 로직이 하나 있다. 처음 가입하는 사용자는 기본적으로 BASIC 레벨이어야 한다는 부분이다. 이 로직은 어디에 담는 것이 좋을까?
+- 일단 UserDaoJdbc의 add() 메소드는 적합하지 않아 보인다. UserDaoJdbc는 주어진 User 오브젝트를 DB에 정보를 넣고 읽는 방법에만 관심을 가져야지, 비즈니스적인 의미를 지닌 정보를 설정하는 책임을 지는 것은 바람직하지 않다.
+- 그렇다면 User 클래스에서 아예 level 필드는 Level.BASIC으로 초기화하는 것은 어떨까? 하지만 처음 가입할 때를 제외하면 무의미한 정보인데 단지 이 로직을 담기 위해 클래스에서 직접 초기화하는 것은 문제가 있어 보인다.
+- 그렇다면 사용자 관리에 대한 비즈니스 로직을 담고 있는 UserService에 이 로직을 넣으면 어떨까? UserDao의 add() 메소드는 사용자 정보를 담은 User 오브젝트를 받아서 DB에 넣어주는 데 충실한 역할을 한다면, UserService에도 add()를 만들어두고 사용자가 등록될 때 적용할 만한 비즈니스 로직을 담당하게 하면 될 것이다.
+
+```
+@Test
+public void add() {
+	
+	userDao.deleteAll();
+	
+	User userWithLevel = users.get(4); // GOLD 레벨이 이미 지정된 User라면 레벨을 초기화하지 않아야 한다.
+	
+	// 레벨이 비어 있는 사용자. 로직에 따라 등록 중에 BASIC 레벨도 설정돼야 한다.
+	User userWithoutLevel = users.get(0);
+	userWithoutLevel.setLevel(null);
+
+	// add() 메소드를 통해 초기화한 뒤에 DB에 저장된다.
+	userService.add(userWithLevel);
+	userService.add(userWithoutLevel);
+	
+	// 저장된 결과를 가져와서 확인한다.
+	User userWithLevelRead = userDao.get(userWithLevel.getId());
+	User userWithoutLevelRead = userDao.get(userWithoutLevel.getId());
+
+	assertThat(userWithLevelRead.getLevel(), is(userWithLevel.getLevel()));
+	assertThat(userWithoutLevelRead.getLevel(), is(Level.BASIC)); // 디폴트인 BASIC 레벨로 설정되었는지 확인
+
+}
+```
+**리스트 5-21 add() 메소드의 테스트**
+<br/><br/>
+
+```
+public void add(User user) {
+	if(user.getLevel() == null) {
+		user.setLevel(Level.BASIC);		
+	}
+	userDao.add(user);
+}
+```
+**리스트 5-22 사용자 신규 등록 로직을 담은 add() 메소드**
+<br/><br/>
 
 ### 5.1.5 코드 개선
 #### upgradeLevels() 메소드 코드의 문제점
