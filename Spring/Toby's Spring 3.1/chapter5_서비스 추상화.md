@@ -248,10 +248,132 @@ public void update() {
 <br/><br/>
 
 #### UserService 클래스와 빈 등록
+```
+package springbook.user.service;
+...
+public class UserService {
+	UserDao userDao;
+	
+	public void setUserDao(UserDao userDao) {
+		this.userDao = userDao;
+	}	
+}
+```
+**리스트 5-14 UserService 클래스**
+<br/><br/>
+
+```
+<bean id="userService" class="springbook.user.service.UserService">
+	<property name="userDao" ref="userDao" />
+</bean>
+```
+**리스트 5-15 userService 빈 설정**
+<br/><br/>
+
 #### UserServiceTest 테스트 클래스
+- UserServiceTest 클래스를 추가하고 테스트 대상인 UserService 빈을 제공받을 수 있도록 @Autowired가 붙은 인스턴스 변수로 선언해준다.
+```
+package springbook.user.service;
+...
+@RunWith(SpringJunit4ClassRunner.class)
+@ContextConfiguration(locations="/test-applicationContext.xml")
+public class UserService {
+	@Autowired
+	UserService userService;
+}
+```
+**리스트 5-16 UserServiceTest 클래스**
+- 이 상태로 JUnit 테스트로 실행해보면 테스트 메소드가 하나도 없다고 에러가 날 것이다.
+<br/><br/>
+
+```
+@Test
+public void bean() {
+	assertThat(this.userService, is(notNullValue()));
+}
+```
+**리스트 5-17 userService 빈의 주입을 확인하는 테스트**
+<br/><br/>
+
 #### upgradeLevels() 메소드
+```
+public void upgradeLevels() {
+	
+	List<User> users = userDao.getAll();
+	
+	for(User user : users) {
+		
+		Boolean changed = null; // 레벨의 변화가 있는지를 확인하는 플래그
+		
+		if(user.getLevel() == Level.BASIC && user.getLogin() >= 50) { // BASIC 레벨 업그레이드 작업
+			user.setLevel(Level.SILVER);
+			changed = true;
+		} else if(user.getLevel() == Level.SILVER && user.getRecommend() >= 30) { // SILVER 레벨 업그레이드 작업
+			user.setLevel(Level.GOLD);
+			changed = true;
+		} else if(user.getLevel() == Level.GOLD) { // GOLD 레벨은 변경이 일어나지 않는다
+			changed = false;
+		} else { // 일치하는 조건이 없으면 변경 없음
+			changed = false;
+		}
+		
+		if(changed) { // 레벨의 변경이 있는 경우에만 update() 호출
+			userDao.update(user);
+		}
+		
+	}
+}
+```
+**리스트 5-18 사용자 레벨 업그레이드 메소드**
+<br/><br/>
+
 #### upgradeLevels() 테스트
-<br/>
+```
+class UserServiceTest {
+	...
+	List<User> users;
+	
+	@Before
+	public void setUp() {
+		users = Arrays.asList( // 배열을 리스트로 만들어서 가변인자로 넣어주고 있다.
+				new User("bumjin", "박범진", "p1", Level.BASIC, 49, 0);
+				new User("joytouch", "강명성", "p2", Level.BASIC, 50, 0);
+				new User("erwins", "신승한", "p3", Level.SILVER, 60, 29);
+				new User("madnite1", "이상호", "p4", Level.SILVER, 60, 30);
+				new User("green", "오민규", "p5", Level.GOLD, 100, 100);
+		);
+	}
+}
+```
+**리스트 5-19 리스트로 만든 테스트 픽스처**
+<br/><br/>
+
+```
+@Test
+public void upgradeLevels() {
+	
+	userDao.deleteAll();
+	
+	for(User user : users) {
+		userDao.add(user);
+	}
+	
+	// 각 사용자별로 업그레이드 후의 예상 레벨을 검증한다.
+	checkLevel(users.get(0), Level.BASIC);
+	checkLevel(users.get(1), Level.SILVER);
+	checkLevel(users.get(2), Level.SILVER);
+	checkLevel(users.get(3), Level.GOLD);
+	checkLevel(users.get(4), Level.GOLD);
+	
+}
+
+private void checkLevel(User user, Level expectedLevel) {
+	User userUpdate = userDao.get(user.getId());
+	assertThat(userUpdate.getLevel(), is(expectedLevel));
+}
+```
+**리스트 5-20 사용자 레벨 업그레이드 테스트**
+<br/><br/>
 
 ### 5.1.4 UserService.add()
 <br/>
