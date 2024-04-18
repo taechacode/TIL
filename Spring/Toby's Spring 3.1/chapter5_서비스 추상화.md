@@ -620,7 +620,7 @@ private void checkLevelUpgraded(User user, boolean upgraded) { // upgraded 변�
 }
 ```
 **리스트 5-30 개선한 upgradeLevels() 테스트**
-- 각 사용자에 대해 업그레이드를 확인하려는 것읹지 아닌지가 좀 더 이해하기 쉽게 true, false로 나타나 있어서 보기 좋다.
+- 각 사용자에 대해 업그레이드를 확인하려는 것인지 아닌지가 좀 더 이해하기 쉽게 true, false로 나타나 있어서 보기 좋다.
 <br/><br/>
 
 ```
