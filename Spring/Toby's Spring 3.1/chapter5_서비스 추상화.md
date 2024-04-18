@@ -593,7 +593,83 @@ public class UserTest {
 <br/><br/>
 
 #### UserServiceTest 개선
-<br/>
+```
+@Test
+public void upgradeLevels() {
+	
+	userDao.deleteAll();
+	for(User user : users) userDao.add(user);
+	
+	userService.upgradeLevels();
+	
+	checkLevelUpgraded(users.get(0), false);
+	checkLevelUpgraded(users.get(1), true);
+	checkLevelUpgraded(users.get(2), false);
+	checkLevelUpgraded(users.get(3), true);
+	checkLevelUpgraded(users.get(4), false);
+	
+}
+
+private void checkLevelUpgraded(User user, boolean upgraded) { // upgraded 변수는 어떤 레벨로 바뀔 것인가가 아니라, 다음 레벨로 업그레이드될 것인가를 지정한다.
+	User userUpdate = userDao.get(user.getId());
+	if(upgraded) {
+		assertThat(userUpdate.getLevel(), is(user.getLevel().nextLevel())); // 업그레이드가 일어났는지 확인
+	} else {
+		assertThat(userUpdate.getLevel(), is(user.getLevel())); // 업그레이드가 일어나지 않았는지 확인
+	}
+}
+```
+**리스트 5-30 개선한 upgradeLevels() 테스트**
+- 각 사용자에 대해 업그레이드를 확인하려는 것읹지 아닌지가 좀 더 이해하기 쉽게 true, false로 나타나 있어서 보기 좋다.
+<br/><br/>
+
+```
+case BASIC: return (user.getLogin() >= 50); // UserService
+new User("joytouch", "강명성", "p2", Level.BASIC, 50, 0) // UserServiceTest
+```
+- 업그레이드 조건인 로그인 횟수와 추천 횟수가 애플리케이션 코드와 테스트 코드에 중복돼서 나타난다.
+- 테스트와 애플리케이션 코드에 나타난 이런 숫자의 중복도 제거해줘야 한다. 한 가지 변경 이유가 발생했을 때 여러 군데를 고치게 만든다면 중복이기 때문이다.
+- 기준이 되는 최소 로그인 횟수가 변경될 때도 한 번만 수정할 수 있도록 만든다.
+<br/><br/>
+
+```
+public static final int MIN_LOGCOUNT_FOR_SILVER = 50;
+public static final int MIN_RECCOMEND_FOR_GOLD = 30;
+
+private boolean canUpgradeLevel(User user) {
+	
+	Level currentLevel = user.getLevel();
+	switch(currentLevel) {
+		case BASIC: return (user.getLogin() >= MIN_LOGCOUNT_FOR_SILVER);
+		case SILVER: return (user.getRecommend() >= MIN_RECCOMEND_FOR_GOLD);
+		case GOLD: return false;
+		default: throw new IllegalArgumentException("Unknown Level: " + currentLevel);
+	}
+	
+}
+```
+**리스트 5-31 상수의 도입 (UserService 수정)**
+<br/><br/>
+
+```
+import static springbook.user.service.Userservice.MIN_LOGCOUNT_FOR_SILVER;
+import static springbook.user.service.Userservice.MIN_RECCOMEND_FOR_GOLD;
+...
+
+@Before
+public void setUp() {
+	users = Arrays.asList(
+			new User("bumjin", "박범진", "p1", Level.BASIC, MIN_LOGCOUNT_FOR_SILVER - 1, 0);
+			new User("joytouch", "강명성", "p2", Level.BASIC, MIN_LOGCOUNT_FOR_SILVER, 0);
+			new User("erwins", "신승한", "p3", Level.SILVER, 60, MIN_RECCOMEND_FOR_GOLD - 1);
+			new User("madnite1", "이상호", "p4", Level.SILVER, 60, MIN_RECCOMEND_FOR_GOLD);
+			new User("green", "오민규", "p5", Level.GOLD, 100, Integer.MAX_VALUE);
+	);
+}
+```
+**리스트 5-32 상수를 사용하도록 만든 테스트 (UserServiceTest 수정)**
+- 숫자로만 되어 있는 경우에는 비즈니스 로직을 상세히 코멘트로 달아놓거나 설계문서를 참조하기 전에는 이해하기 힘들었던 부분이 이제는 무슨 의도로 어떤 값을 넣었는지 이해하기 쉬워졌다.
+<br/><br/>
 
 ## 5.2 트랜잭션 서비스 추상화
 
