@@ -727,3 +727,37 @@ public void setUp() {
 #### 테스트 대역의 종류와 특징
 #### 목 오브젝트를 이용한 테스트
 <br/>
+
+## 부록
+```
+package rps.core.member;
+
+public class Member {
+
+    private Long id;
+    private String name;
+    private MemberType memberType;
+    private Long burdfeePayinAmt;
+    private Long limitPayinAmt;
+    private Long limitTaxAmt;
+    private int pensionCount;
+
+    public Member(Long id, String name, MemberType memberType) {
+        this.id = id;
+        this.name = name;
+        this.memberType = memberType;
+        this.burdfeePayinAmt = 0L;
+        this.limitPayinAmt = 18000000L;
+        this.limitTaxAmt = 0L;
+        if(memberType == MemberType.PER) {
+            limitTaxAmt = 9000000L;
+        }
+        this.pensionCount = 0;
+    }
+```
+**기존 개인 프로젝트에서 개발한 Member 클래스**
+- Member 객체 생성자 단계에서 입금 한도 및 세액공제 한도를 체크하는 것이 옳은가?
+
+<br/><br/>
+### Java Enum 활용기 (우아한형제들 기술블로그)
+***https://techblog.woowahan.com/2527/***
