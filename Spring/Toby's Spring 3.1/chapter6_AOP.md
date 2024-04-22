@@ -68,6 +68,97 @@
 <br/><br/>
 
 #### UserDao 목 오브젝트
+- UserDao와 DB까지 직접 의존하고 있는 첫 번째와 네 번째의 테스트 방식도 목 오브젝트를 만들어서 적용해보자.
+```
+public void upgradeLevels() {
+	List<User> users = userDao.getAll(); // 업그레이드 후보 사용자 목록을 가져온다.
+	for(User user : users) {
+		if(canUpgradeLevel(user)) {
+			upgradeLevel(user);
+		}
+	}
+}
 
+protected void upgradeLevel(User user) {
+	user.upgradeLevel();
+	userDao.update(user); // 수정된 사용자 정보를 DB에 반영한다.
+	sendUpgradeEmail(user);
+}
+```
+**리스트 6-11 사용자 레벨 업그레이드 작업 중에 UserDao를 사용하는 코드**
+<br/><br/>
+
+```
+static class MockUserDao implements UserDao {
+	private List<User> users; // 레벨 업그레이드 후보 User 오브젝트 목록
+	private List<User> updated = new ArrayList<>(); // 업그레이드 대상 오브젝트를 저장해둘 목록
+	
+	private MockUserDao(List<User> users) {
+		this.users = users;
+	}
+	
+	public List<User> getUpdated() {
+		return this.updated;
+	}
+	
+	// 스텁 기능 제공
+	public List<User> getAll() {
+		return this.users;
+	}
+	
+	// 목 오브젝트 기능 제공
+	public void update(User user) {
+		updated.add(user);
+	}
+	
+	// 테스트에 사용되지 않는 메소드들
+	public void add(User user) { throw new UnspportedOperationException(); }
+	public void deleteAll() { throw new UnspportedOperationException(); }
+	public void get(String id) { throw new UnspportedOperationException(); }
+	public int getCount() { throw new UnspportedOperationException(); }
+}
+```
+**리스트 6-12 UserDao 오브젝트**
+- MockUserDao는 2개의 User 타입 리스트를 정의해둔다.
+- 하나는 생성자를 통해 전달받은 사용자 목록을 저장해뒀다가, getAll() 메소드가 호출되면 DB에서 가져온 것처럼 돌려주는 용도다. 목 오브젝트를 사용하지 않을 때는 일일이 DB에 저장했다가 다시 가져와야 했지만, MockUserDao는 미리 준비된 테스트용 리스트를 메모리에 갖고 있다가 돌려주기만 하면 된다.
+- 다른 하나는 update() 메소드를 실행하면서 넘겨준 업그레이드 대상 User 오브젝트를 저장해뒀다가 검증을 위해 돌려주기 위한 것이다. upgradeLevels() 메소드가 실행되는 동안 업그레이드 대상으로 선정된 사용자가 어떤 것인지 확인하는 데 쓰인다.
+<br/><br/>
+
+```
+@Test
+public void upgradeLevels() throws Exception {
+	
+	// 고립된 테스트에서는 테스트 대상 오브젝트를 직접 생성하면 된다.
+	UserServiceImpl userServiceImpl = new UserServiceImpl();
+	
+	// 목 오브젝트로 만든 UserDao를 직접 DI 해준다.
+	MockUserDao mockUserDao = new MockUserDao(this.users);
+	userServiceImpl.setUserDao(mockUserDao);
+	
+	MockMailSender mockMailSender = new MockMailSender();
+	userServiceImpl.setMailSender(mockMailSender);
+	
+	userServiceImpl.upgradeLevels();
+	
+	List<User> updated = mockUserDao.getUpdated(); // MockUserDao로부터 업데이트 결과를 가져온다.
+	
+	// 업데이트 횟수와 정보를 확인한다.
+	assertThat(updated.size(), is(2));
+	checkUserAndLevel(updated.get(0), "joytouch", Level.SILVER);
+	checkUserAndLevel(updated.get(1), "madnite1", Level.GOLD);
+	
+	List<String> request = mockMailSender.getRequests();
+	assertThat(request.size(), is(2));
+	assertThat(request.get(0), is(users.get(1).getEmail()));
+	assertThat(request.get(1), is(users.get(3).getEmail()));
+}
+
+private void checkUserAndLevel(User updated, String expectedId, Level expectedLevel) {
+	assertThat(updated.getId(), is(expectedId));
+	assertThat(updated.getLevel(), is(expectedLevel));
+}
+```
+**리스트 6-13 MockUserDao를 사용해서 만든 고립된 테스트**
+<br/><br/>
 
 ## 6.3 다이내믹 프록시와 팩토리 빈
