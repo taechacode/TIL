@@ -239,3 +239,54 @@ private void checkUserAndLevel(User updated, String expectedId, Level expectedLe
 ![프록시 패턴과 데코레이터 패턴의 혼용](https://github.com/taechacode/TIL/assets/63395751/5c666c6a-7d8d-4edf-93f3-b36c3d09ae9c)
 **그림 6-12 프록시 패턴과 데코레이터 패턴의 혼용**
 <br/><br/>
+
+### 6.3.2 다이내믹 프록시
+- 프록시를 만드는 일이 상당히 번거롭게 여겨진다. 매번 새로운 클래스를 정의해야 하고, 인터페이스의 구현해야 할 메소드는 많으면 모든 메소드를 일일히 구현해서 위임하는 코드를 넣어야 하기 때문이다.
+- Java에는 java.lang.reflect 패키지 안에 프록시를 손쉽게 만들 수 있도록 지원해주는 클래스들이 있다. 일일이 프록시 클래스를 정의하지 않고도 몇 가지 API를 이용해 프록시처럼 동작하는 오브젝트를 다이내믹하게 생성하는 것이다.
+<br/><br/>
+
+#### 프록시의 구성과 프록시 작성의 문제점
+- 프록시는 다음의 두 가지 기능으로 구성된다.
+    - 타깃과 같은 메소드를 구현하고 있다가 메소드가 호출되면 타깃 오브젝트로 위임한다.
+    - 지정된 요청에 대해서는 부가기능을 수행한다.
+<br/><br/>
+
+```
+public class UserServiceTx implements UserService {
+	
+	UserService userService; // 타깃 오브젝트
+	...
+	
+	// 메소드 구현과 위임
+	public void add(User user) {
+		this.userService.add(user);
+	}
+	
+	public void upgradeLevels() {
+		
+		// 부가기능 수행
+		TransactionStatus status = this.transactionManager.getTransaction(new DefaultTransactionDefinition());
+		
+		try {
+			
+			userService.upgradeLevels(); // 위임
+			
+			// 부가기능 수행
+			this.transactionManager.commit();
+		} catch (RuntimeException e) {
+			this.transactionManager.rollback(status);
+			throw e;
+		}
+	}
+	
+}
+```
+**리스트 6-16 UserServiceTx 프록시의 기능 구분**
+- UserServiceTx 코드는 UserService 인터페이스를 구현하고 타깃으로 요청을 위임하는 트랜잭션 부가기능을 수행하는 코드로 구분할 수 있다. 이렇게 프록시의 역할은 위임과 부가작업이라는 두 가지로 구분할 수 있다.
+- 그렇다면 프록시를 만들기가 번거로운 이유는 무엇일까?
+    - 첫째는 타깃의 인터페이스를 구현하고 위임하는 코드를 작성하기가 번거롭다는 점이다. 부가기능이 필요 없는 메소드도 구현해서 타깃으로 위임하는 코드를 일일이 만들어줘야 한다.
+    - 두 번째 문제점은 부가기능 코드가 중복될 가능성이 많다는 점이다. 메소드가 많아지고 트랜잭션 적용의 비율이 높아지면 트랜잭션 기능을 제공하는 유사한 코드가 여러 메소드에 중복돼서 나타날 것이다.
+- 위의 문제들을 해결하는 데 유용한 것이 바로 JDK의 `다이내믹 프록시`다.
+<br/><br/>
+
+#### 리플렉션
