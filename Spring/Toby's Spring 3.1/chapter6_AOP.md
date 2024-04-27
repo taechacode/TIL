@@ -290,3 +290,27 @@ public class UserServiceTx implements UserService {
 <br/><br/>
 
 #### 리플렉션
+- 다이내믹 프록시는 리플렉션 기능을 이용해서 프록시를 만들어준다. `리플렉션`은 자바의 코드 자체를 추상화해서 접근하도록 만든 것이다.
+```
+String name = "Spring";
+```
+- 이 문자열의 길이를 알고 싶으면 String 클래스의 length() 메소드를 호출하면 된다. 일반적인 사용 방법은 name.length() 같이 직접 메소드를 호출하는 코드로 만드는 것이다.
+- Java의 모든 클래스는 그 클래스 자체의 구성정보를 담은 Class 타입의 오브젝트를 하나씩 갖고 있다. `클래스이름.class`라고 하거나 오브젝트의 `getClass()` 메소드를 호출하면 클래스 정보를 담은 Class 타입의 오브젝트를 가져올 수 있다.
+- 클래스 오브젝트를 이용하면 클래스 코드에 대한 메타정보를 가져오거나 오브젝트를 조작할 수 있다. 예를 들어 클래스의 이름이 무엇이고, 어떤 클래스를 상속하고, 어떤 인터페이스를 구현했는지, 어떤 필드를 갖고 있고, 각각의 타입은 무엇인지 등을 알아낼 수 있다. 더 나아가서 오브젝트 필드의 값을 읽고 수정할 수도 잇고, 원하는 파라미터 값을 이용해 메소드를 호출할 수도 있다.
+- 리플렉션 API 중에 메소드에 대한 정의를 담은 Method라는 인터페이스를 이용해 메소드 호출하는 방법을 알아보자.
+```
+Method lengthMethod = String.class.getMethod("length");
+```
+- String이 가진 메소드 중에서 "length"라는 이름을 갖고 있고, 파라미터는 없는 메소드의 정보를 가져오는 것이다.
+- java.lang.reflect.Method 인터페이스는 메소드에 대한 자세한 정보를 담고 있을 뿐만 아니라, 이를 이용해 특정 오브젝트의 메소드를 실행시킬 수도 있다. Method 인터페이스에 정의된 `invoke()` 메소드를 사용하면 된다.
+```
+public Object invoke(Object obj, Object... args)
+```
+- invoke() 메소드는 메소드를 실행시킬 대상 오브젝트(obj)와 파라미터 목록(args)을 받아서 메소드를 호출한 뒤에 그 결과를 Object 타입으로 돌려준다.
+```
+int length = lengthMethod.invoke(name); // int length = name.length();
+```
+- 이를 이용해 위와 같이 length() 메소드를 실행할 수 있다.
+<br/><br/>
+
+#### 프록시 클래스
