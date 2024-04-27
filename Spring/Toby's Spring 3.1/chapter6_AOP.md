@@ -314,3 +314,64 @@ int length = lengthMethod.invoke(name); // int length = name.length();
 <br/><br/>
 
 #### 프록시 클래스
+- 다이내믹 프록시를 이용한 프록시를 만들어보자. 아래의 Hello 인터페이스를 구현한 프록시를 만든다. 프록시에는 데코레이터 패턴을 적용해서 타깃인 HelloTarget에 부가기능을 추가한다. 추가한 기능은 return하는 문자를 모두 대문자로 바꿔주는 것이다.
+- HelloUpperCase 프록시는 Hello 인터페이스를 구현하고, Hello 타입의 타깃 오브젝트를 받아서 저장해둔다. Hello 인터페이스 구현 메소드에서는 타깃 오브젝트의 메소드를 호출한 뒤에 결과를 대문자로 바꿔주는 부가기능을 적용하고 return한다. 위임과 기능 부가라는 두 가지 프록시의 기능을 모두 처리하는 전형적인 프록시 클래스다.
+```
+interface Hello {
+	String sayHello(String name);
+	String sayHi(String name);
+	String sayThankYou(String name);
+}
+```
+**리스트 6-18 Hello 인터페이스**
+<br/><br/>
+
+```
+public class HelloTarget implements Hello {
+	
+	public String sayHello(String name) {
+		return "Hello " + name;
+	}
+	
+	public String sayHi(String name) {
+		return "Hi " + name;
+	}
+	
+	public String sayThankYou(String name) {
+		return "Thank You " + name;
+	}
+	
+}
+```
+**리스트 6-19 타깃 클래스**
+<br/><br/>
+
+```
+public class HelloUpperCase implements Hello {
+	
+	// 위임할 타깃 오브젝트.
+	// 여기서는 타깃 클래스의 오브젝트인 것은 알지만 다른 프록시를 추가할 수도 있으므로 인터페이스로 접근한다.
+	Hello hello;
+	
+	
+	public HelloUpperCase(Hello hello) {
+		this.hello = hello;
+	}
+	
+	public String sayHello(String name) {
+		return hello.sayHello(name).toUpperCase(); // 위임과 부가기능 적용
+	}
+	
+	public String sayHi(String name) {
+		return hello.sayHi(name).toUpperCase();
+	}
+	
+	public String sayThankYou(String name) {
+		return hello.sayThankYou(name).toUpperCase();
+	}
+	
+}
+```
+**리스트 6-21 프록시 클래스**
+- 이 프록시는 프록시 적용의 일반적인 문제점 두 가지를 모두 갖고 있다. 인터페이스의 모든 메소드를 구현해 위임하도록 코드를 만들어야 하며, 부가기능인 return 값을 대문자로 바꾸는 기능이 모든 메소드에 중복돼서 나타난다.
+<br/><br/>
